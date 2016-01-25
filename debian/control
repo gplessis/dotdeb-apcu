@@ -1,0 +1,26 @@
+Source: apcu
+Section: php
+Priority: optional
+Maintainer: Guillaume Plessis <gui@dotdeb.org>
+Build-Depends: debhelper (>= 9),
+               dh-php,
+               libpcre3-dev,
+               php7.0-dev
+Standards-Version: 3.9.6
+Homepage: http://pecl.php.net/package/APCu
+
+Package: php7.0-apcu
+Architecture: any
+Depends: ${misc:Depends},
+         ${php:Depends},
+         ${shlibs:Depends}
+Suggests: php7.0-gd
+Recommends: ${misc:Recommends}
+Description: APC User Cache for PHP
+ The APCu is userland caching: APC (Alternative PHP Cache) stripped of
+ opcode caching after the deployment of Zend OpCache in PHP 5.5 as the
+ primary solution to opcode caching in future versions of PHP.
+ .
+ The APCu is a fast solution for userland caching (and dumping) of PHP
+ variables locally, it is not distributed like MemcacheD, but they can
+ be used together for optimal caching.
