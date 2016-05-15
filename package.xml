@@ -22,10 +22,10 @@
   <email>ab@php.net</email>
   <active>yes</active>
  </developer>
- <date>2016-01-15</date>
- <time>13:15:18</time>
+ <date>2016-05-12</date>
+ <time>10:30:02</time>
  <version>
-  <release>5.1.3</release>
+  <release>5.1.4</release>
   <api>5.1.2</api>
  </version>
  <stability>
@@ -34,9 +34,9 @@
  </stability>
  <license uri="http://www.php.net/license">PHP License</license>
  <notes>
-- fixed macro using interlocked increment in Windows
-- fix gh#158 apc_inc() with negative step value hangs the process
-- fix gh#164 apc_inc() can take minutes with huge step value
+- fix possible memory leak
+- fix gh#168 drop trying to return strings from shm
+- fix gh#170 do not create entries when serialization fails
  </notes>
  <contents>
   <dir name="/">
@@ -55,6 +55,7 @@
    <file md5sum="3cc23ae68e2ac9194d0474b80fdb9f8c" name="tests/apc_012.phpt" role="test" />
    <file md5sum="9054d27f14c83e863072d37fcbde78f3" name="tests/apc_013_exists.phpt" role="test" />
    <file md5sum="a8370b10ab982d2ba2dff4ae90f11a05" name="tests/apc_014_store_ref.phpt" role="test" />
+   <file md5sum="41bbe9a926c4c2061f0273b454ef69bf" name="tests/apc_015.phpt" role="test" />
    <file md5sum="67d3eb96ff22f09c522275ac0362a604" name="tests/apc54_014.phpt" role="test" />
    <file md5sum="6c84ee0a5c0a7b45ccefa252037b8ddb" name="tests/apc54_018.phpt" role="test" />
    <file md5sum="4ae65eed2f7065e58d28406a9a3871d2" name="tests/apc_entry_001.phpt" role="test" />
@@ -64,6 +65,8 @@
    <file md5sum="258cc67a839b35df85d7cdaef57710e9" name="tests/get_included_files_inc1.inc" role="test" />
    <file md5sum="f1e8b517459a9ebd8dba964d4990fc31" name="tests/get_included_files_inc2.inc" role="test" />
    <file md5sum="c95a47810e7195ebcc32b36c33d09f87" name="tests/get_included_files_inc3.inc" role="test" />
+   <file md5sum="141948f7468cf81c50265fabf130bbba" name="tests/ghbug176.phpt" role="test" />
+   <file md5sum="77792cb6773c8ac8b78b7d7ce9a54a92" name="tests/ghbug168.phpt" role="test" />
    <file md5sum="5ee07570994aad23e67dc788320f5d2a" name="tests/iterator_001.phpt" role="test" />
    <file md5sum="5cec226de1ef35664d24bc94b291e176" name="tests/iterator_002.phpt" role="test" />
    <file md5sum="a67afb23a1bf0df7fe9f2e869987793f" name="tests/iterator_003.phpt" role="test" />
@@ -74,15 +77,16 @@
    <file md5sum="92e7b033fac8b625c6ad52e21d1222bf" name="tests/php_5_3_ns.inc" role="test" />
    <file md5sum="096b40266d5c4dcc1536db3846ca7fb1" name="tests/server_test.inc" role="test" />
    <file md5sum="14e70551b840b0cabe01bbc2082ddb6b" name="tests/skipif.inc" role="test" />
-   <file md5sum="82180b525b9423f50c7fbfe2b61d0cd4" name="tests/data/abc.data" role="test" />
+   <file md5sum="28779d87940edb30a1986cc520d5619b" name="tests/data/abc.data" role="test" />
+   <file md5sum="a77d6ee236d985bab7f0d94298aada06" name="tests/bad/abc.data" role="test" />
    <file md5sum="309f6433ed177c3808a05201a900c02f" name="apc_api.h" role="src" />
    <file md5sum="316770a4bd123d2e6cc2f23918ef3c19" name="apc_arginfo.h" role="src" />
    <file md5sum="bb14563e4d9cb7e61e464ae741d4f911" name="apc.c" role="src" />
    <file md5sum="720c3310049abcd4a8fbfa4b936b6218" name="apc_cache_api.h" role="src" />
-   <file md5sum="eb416175923e84ba76b2c4b03e684188" name="apc_cache.c" role="src" />
+   <file md5sum="6f50fab10dfdd785ea43ade8f25bb6ab" name="apc_cache.c" role="src" />
    <file md5sum="3a1eae08974c74d347031318bea6218b" name="apc_cache.h" role="src" />
    <file md5sum="0cf1d248228b58ee025942bb508ba2d7" name="apc_globals.h" role="src" />
-   <file md5sum="3d438d13fcf7ec9f02950c999f70706e" name="apc.h" role="src" />
+   <file md5sum="e112452c833e42f6fa91c6b559ac2500" name="apc.h" role="src" />
    <file md5sum="298b08e0c8baa798d349bb37900feb08" name="apc_iterator.c" role="src" />
    <file md5sum="18f622cd6821628fbeecbafd4d4c6e71" name="apc_iterator.h" role="src" />
    <file md5sum="79403f69f3272beed0043090d0887e56" name="apc_lock_api.h" role="src" />
@@ -93,7 +97,7 @@
    <file md5sum="2acf58c09e20a4ea5d501391861735e6" name="apc.php" role="src" />
    <file md5sum="bc56a9a1b6d6187f6b27de226c736fd8" name="apc_php.h" role="src" />
    <file md5sum="ba698affef93ddbb6505ef055c6dea69" name="apc_pool_api.h" role="src" />
-   <file md5sum="4085be0e7f5ea2e9455bdb594cd897bc" name="apc_pool.c" role="src" />
+   <file md5sum="e92a7d1a514f05a7e5c9bd8dde2da843" name="apc_pool.c" role="src" />
    <file md5sum="a12adbff1dbd80000b2291b98f9103c3" name="apc_pool.h" role="src" />
    <file md5sum="76969d6ef7d9b37146d950c590a45557" name="apc_shm.c" role="src" />
    <file md5sum="a5ce0b0a7a497be43689de9b54ed3ab4" name="apc_shm.h" role="src" />
@@ -116,8 +120,8 @@
    <file md5sum="155853fb8cb9945c07313f05874866b6" name="Makefile.frag" role="src" />
    <file md5sum="eea150699d3dffb2cdf7d243854189d7" name="NOTICE" role="doc" />
    <file md5sum="b831a494bcd2f08305dc283bc5c0bd0c" name="php_apc.c" role="src" />
-   <file md5sum="f06af80735b1a853b1574eb7836a858d" name="php_apc.h" role="src" />
-   <file md5sum="ce589eb73aa1e7a6c4a3122fb9438abc" name="README.md" role="doc" />
+   <file md5sum="2bf06255762a36c07e4ffcc862e6abdf" name="php_apc.h" role="src" />
+   <file md5sum="eb2c7c919f656b5ed8991c37575734d8" name="README.md" role="doc" />
    <file md5sum="8159d948b4d05994f7478b5d0e07c371" name="TECHNOTES.txt" role="doc" />
    <file md5sum="19a56a46925a8196705c34e1d9878a07" name="TODO" role="doc" />
   </dir>
@@ -128,7 +132,7 @@
     <min>7.0.0-dev</min>
    </php>
    <pearinstaller>
-    <min>1.4.0b1</min>
+    <min>1.10</min>
    </pearinstaller>
   </required>
  </dependencies>
@@ -137,6 +141,59 @@
   <configureoption default="no" name="enable-apcu-debug" prompt="Enable internal debugging in APCu" />
  </extsrcrelease>
  <changelog>
+  <release>
+   <date>2016-01-15</date>
+   <version>
+    <release>5.1.3</release>
+    <api>5.1.2</api>
+   </version>
+   <stability>
+    <release>stable</release>
+    <api>stable</api>
+   </stability>
+   <license uri="http://www.php.net/license">PHP License</license>
+   <notes>
+- fixed macro using interlocked increment in Windows
+- fix gh#158 apc_inc() with negative step value hangs the process
+- fix gh#164 apc_inc() can take minutes with huge step value
+   </notes>
+  </release>
+  <release>
+   <date>2015-12-02</date>
+   <version>
+    <release>5.1.2</release>
+    <api>5.1.2</api>
+   </version>
+   <stability>
+    <release>stable</release>
+    <api>stable</api>
+   </stability>
+   <license uri="http://www.php.net/license">PHP License</license>
+   <notes>
+- be wholly consistent with APC in use of atomics
+   </notes>
+  </release>
+  <release>
+   <date>2015-11-20</date>
+   <version>
+    <release>5.1.0</release>
+    <api>5.1.0</api>
+   </version>
+   <stability>
+    <release>beta</release>
+    <api>beta</api>
+   </stability>
+   <license uri="http://www.php.net/license">PHP License</license>
+   <notes>
+- PHP 7 compatibility
+- provide APC compatibility in &quot;apc&quot; optional extension
+- move APCIterator to APC compatibility extension
+- add APCuIterator without cache argument
+- drop apcu_bin_* functions
+- add apcu_entry(key, callback, ttl) function
+- fix race on refcount of entry when using rwlocks (or on windows)
+   </notes>
+  </release>
   <release>
    <date>2014-10-11</date>
    <time>17:02:21</time>
