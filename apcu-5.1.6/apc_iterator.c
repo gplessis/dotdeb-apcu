@@ -50,7 +50,7 @@ static apc_iterator_item_t* apc_iterator_item_ctor(apc_iterator_t *iterator, apc
 	}
 
 	if (APC_ITER_KEY & iterator->format) {
-		add_assoc_str(&item->value, "key", item->key);
+		add_assoc_str(&item->value, "key", zend_string_copy(item->key));
 	}
 
     if (APC_ITER_VALUE & iterator->format) {
@@ -197,6 +197,7 @@ static int apc_iterator_fetch_active(apc_iterator_t *iterator) {
     apc_cache_slot_t **slot;
     apc_iterator_item_t *item;
     time_t t;
+	zend_bool bailout = 0;
 
     t = apc_time();
 
@@ -205,25 +206,34 @@ static int apc_iterator_fetch_active(apc_iterator_t *iterator) {
     }
 
 	APC_RLOCK(apc_user_cache->header);
-    while(count <= iterator->chunk_size && iterator->slot_idx < apc_user_cache->nslots) {
-        slot = &apc_user_cache->slots[iterator->slot_idx];
-        while(*slot) {
-            if (apc_iterator_check_expiry(apc_user_cache, slot, t)) {
-                if (apc_iterator_search_match(iterator, slot)) {
-                    count++;
-                    item = apc_iterator_item_ctor(iterator, slot);
-                    if (item) {
-                        apc_stack_push(iterator->stack, item);
-                    }
-                }
-            }
-            slot = &(*slot)->next;
-        }
-        iterator->slot_idx++;
-    }
+
+    zend_try {
+		while(count <= iterator->chunk_size && iterator->slot_idx < apc_user_cache->nslots) {
+		    slot = &apc_user_cache->slots[iterator->slot_idx];
+		    while(*slot) {
+		        if (apc_iterator_check_expiry(apc_user_cache, slot, t)) {
+		            if (apc_iterator_search_match(iterator, slot)) {
+		                count++;
+		                item = apc_iterator_item_ctor(iterator, slot);
+		                if (item) {
+		                    apc_stack_push(iterator->stack, item);
+		                }
+		            }
+		        }
+		        slot = &(*slot)->next;
+		    }
+		    iterator->slot_idx++;
+		}
+	} zend_catch {
+		bailout = 1;
+	} zend_end_try();
 
     iterator->stack_idx = 0;
 	APC_RUNLOCK(apc_user_cache->header);
+
+	if (bailout) {
+		zend_bailout();
+	}
 
     return count;
 }
@@ -234,28 +244,38 @@ static int apc_iterator_fetch_deleted(apc_iterator_t *iterator) {
     int count=0;
     apc_cache_slot_t **slot;
     apc_iterator_item_t *item;
+	zend_bool bailout = 0;
 
 	APC_RLOCK(apc_user_cache->header);
-    slot = &apc_user_cache->header->gc;
-    while ((*slot) && count <= iterator->slot_idx) {
-        count++;
-        slot = &(*slot)->next;
-    }
-    count = 0;
-    while ((*slot) && count < iterator->chunk_size) {
-        if (apc_iterator_search_match(iterator, slot)) {
-            count++;
-            item = apc_iterator_item_ctor(iterator, slot);
-            if (item) {
-                apc_stack_push(iterator->stack, item);
-            }
-        }
-        slot = &(*slot)->next;
-    }
+
+    zend_try {
+		slot = &apc_user_cache->header->gc;
+		while ((*slot) && count <= iterator->slot_idx) {
+		    count++;
+		    slot = &(*slot)->next;
+		}
+		count = 0;
+		while ((*slot) && count < iterator->chunk_size) {
+		    if (apc_iterator_search_match(iterator, slot)) {
+		        count++;
+		        item = apc_iterator_item_ctor(iterator, slot);
+		        if (item) {
+		            apc_stack_push(iterator->stack, item);
+		        }
+		    }
+		    slot = &(*slot)->next;
+		}
+	} zend_catch {
+		bailout = 1;
+	} zend_end_try();
 
     iterator->slot_idx += count;
     iterator->stack_idx = 0;
 	APC_RUNLOCK(apc_user_cache->header);
+
+	if (bailout) {
+		zend_bailout();
+	}
 
     return count;
 }
@@ -265,22 +285,33 @@ static int apc_iterator_fetch_deleted(apc_iterator_t *iterator) {
 static void apc_iterator_totals(apc_iterator_t *iterator) {
     apc_cache_slot_t **slot;
     int i;
+	zend_bool bailout = 0;
 
 	APC_RLOCK(apc_user_cache->header);
-    for (i=0; i < apc_user_cache->nslots; i++) {
-        slot = &apc_user_cache->slots[i];
-        while((*slot)) {
-            if (apc_iterator_search_match(iterator, slot)) {
-                iterator->size += (*slot)->value->mem_size;
-                iterator->hits += (*slot)->nhits;
-                iterator->count++;
-            }
-            slot = &(*slot)->next;
-        }
-    }
+
+    zend_try {
+		for (i=0; i < apc_user_cache->nslots; i++) {
+		    slot = &apc_user_cache->slots[i];
+		    while((*slot)) {
+		        if (apc_iterator_search_match(iterator, slot)) {
+		            iterator->size += (*slot)->value->mem_size;
+		            iterator->hits += (*slot)->nhits;
+		            iterator->count++;
+		        }
+		        slot = &(*slot)->next;
+		    }
+		}
+	} zend_catch {
+		bailout = 1;
+	} zend_end_try();
+
 	APC_RUNLOCK(apc_user_cache->header);
 
     iterator->totals_flag = 1;
+
+	if (bailout) {
+		zend_bailout();
+	}
 }
 /* }}} */
 
@@ -442,7 +473,7 @@ PHP_METHOD(apc_iterator, key) {
     item = apc_stack_get(iterator->stack, iterator->stack_idx);
 
     if (item->key) {
-        RETURN_STR(item->key);
+        RETURN_STR_COPY(item->key);
     } else {
         RETURN_LONG(iterator->key_idx);
     }

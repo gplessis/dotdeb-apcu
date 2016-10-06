@@ -210,6 +210,9 @@ static PHP_MINFO_FUNCTION(apcu)
 /* {{{ PHP_MINIT_FUNCTION(apcu) */
 static PHP_MINIT_FUNCTION(apcu)
 {
+#if defined(ZTS) && defined(COMPILE_DL_APCU)
+    ZEND_TSRMLS_CACHE_UPDATE();
+#endif
     ZEND_INIT_MODULE_GLOBALS(apcu, php_apc_init_globals, NULL);
 
     REGISTER_INI_ENTRIES();
@@ -834,12 +837,13 @@ PHP_FUNCTION(apcu_entry) {
 	zend_fcall_info fci = empty_fcall_info;
 	zend_fcall_info_cache fcc = empty_fcall_info_cache;
 	zend_long ttl = 0L;
+	zend_long now = apc_time();
 
 	if (zend_parse_parameters(ZEND_NUM_ARGS(), "zf|l", &key, &fci, &fcc, &ttl) != SUCCESS) {
 		return;
 	}
 	
-	apc_cache_entry(apc_user_cache, key, &fci, &fcc, ttl, return_value);	
+	apc_cache_entry(apc_user_cache, key, &fci, &fcc, ttl, now, return_value);	
 }
 /* }}} */
 
