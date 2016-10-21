@@ -22,10 +22,10 @@
   <email>ab@php.net</email>
   <active>yes</active>
  </developer>
- <date>2016-10-06</date>
- <time>04:55:53</time>
+ <date>2016-10-21</date>
+ <time>12:03:31</time>
  <version>
-  <release>5.1.6</release>
+  <release>5.1.7</release>
   <api>5.1.2</api>
  </version>
  <stability>
@@ -34,12 +34,8 @@
  </stability>
  <license uri="http://www.php.net/license">PHP License</license>
  <notes>
-- fixes gh#19:  Hung apaches on pthread wrlocks
-- fixes gh#188: Fix Segfault in ZTS build when locking (Tyson Andre)
-- fixes gh#194: apcu_entry ttl not working
-- fixes gh#189: SegFault in apc_copy_zval
-- fixes gh#185: zend_mm_heap corrupted
-- fixes gh#190: memory leak/failed check for duplicates
+- fixes gh#19: hung apaches on pthread wrlocks
+- fixes gh#203: segfaults in bailout / longjmp
  </notes>
  <contents>
   <dir name="/">
@@ -81,7 +77,7 @@
    <file md5sum="e84e5f8da5061e3081104525ff82c9b8" name="tests/iterator_006.phpt" role="test" />
    <file md5sum="b061af0e8d26e644c3a59830ac467f59" name="tests/iterator_007.phpt" role="test" />
    <file md5sum="92e7b033fac8b625c6ad52e21d1222bf" name="tests/php_5_3_ns.inc" role="test" />
-   <file md5sum="096b40266d5c4dcc1536db3846ca7fb1" name="tests/server_test.inc" role="test" />
+   <file md5sum="14aada4fc21019fda91a98fa226acf94" name="tests/server_test.inc" role="test" />
    <file md5sum="14e70551b840b0cabe01bbc2082ddb6b" name="tests/skipif.inc" role="test" />
    <file md5sum="28779d87940edb30a1986cc520d5619b" name="tests/data/abc.data" role="test" />
    <file md5sum="a77d6ee236d985bab7f0d94298aada06" name="tests/bad/abc.data" role="test" />
@@ -89,11 +85,11 @@
    <file md5sum="316770a4bd123d2e6cc2f23918ef3c19" name="apc_arginfo.h" role="src" />
    <file md5sum="bb14563e4d9cb7e61e464ae741d4f911" name="apc.c" role="src" />
    <file md5sum="81a854bab514ed78e76b09c3a4c02539" name="apc_cache_api.h" role="src" />
-   <file md5sum="bb24ee8bc6e06dfdb38f360a6be90988" name="apc_cache.c" role="src" />
+   <file md5sum="f12548e61122ae1b9b0a0e8ef1645a2d" name="apc_cache.c" role="src" />
    <file md5sum="3a1eae08974c74d347031318bea6218b" name="apc_cache.h" role="src" />
    <file md5sum="0cf1d248228b58ee025942bb508ba2d7" name="apc_globals.h" role="src" />
-   <file md5sum="e112452c833e42f6fa91c6b559ac2500" name="apc.h" role="src" />
-   <file md5sum="10b6a0459f2391af14e3cb297da53595" name="apc_iterator.c" role="src" />
+   <file md5sum="9fada5420816b9dd27f347ed21b88777" name="apc.h" role="src" />
+   <file md5sum="127ceff814679acb14e21466d785257f" name="apc_iterator.c" role="src" />
    <file md5sum="18f622cd6821628fbeecbafd4d4c6e71" name="apc_iterator.h" role="src" />
    <file md5sum="79403f69f3272beed0043090d0887e56" name="apc_lock_api.h" role="src" />
    <file md5sum="132c8bf28a0b2e0777ef10aec958d7ec" name="apc_lock.c" role="src" />
@@ -126,7 +122,7 @@
    <file md5sum="155853fb8cb9945c07313f05874866b6" name="Makefile.frag" role="src" />
    <file md5sum="eea150699d3dffb2cdf7d243854189d7" name="NOTICE" role="doc" />
    <file md5sum="bf34298dfd3c4f7bf731119324a8d043" name="php_apc.c" role="src" />
-   <file md5sum="3bcf3f73979dffdf9a720e2d471b305a" name="php_apc.h" role="src" />
+   <file md5sum="577fcb7c8ccbd691e294a6a3b91a373d" name="php_apc.h" role="src" />
    <file md5sum="eb2c7c919f656b5ed8991c37575734d8" name="README.md" role="doc" />
    <file md5sum="8159d948b4d05994f7478b5d0e07c371" name="TECHNOTES.txt" role="doc" />
    <file md5sum="19a56a46925a8196705c34e1d9878a07" name="TODO" role="doc" />
@@ -147,6 +143,26 @@
   <configureoption default="no" name="enable-apcu-debug" prompt="Enable internal debugging in APCu" />
  </extsrcrelease>
  <changelog>
+  <release>
+   <date>2016-10-06</date>
+   <version>
+    <release>5.1.6</release>
+    <api>5.1.2</api>
+   </version>
+   <stability>
+    <release>stable</release>
+    <api>stable</api>
+   </stability>
+   <license uri="http://www.php.net/license">PHP License</license>
+   <notes>
+- fixes gh#19:  Hung apaches on pthread wrlocks
+- fixes gh#188: Fix Segfault in ZTS build when locking (Tyson Andre)
+- fixes gh#194: apcu_entry ttl not working
+- fixes gh#189: SegFault in apc_copy_zval
+- fixes gh#185: zend_mm_heap corrupted
+- fixes gh#190: memory leak/failed check for duplicates
+   </notes>
+  </release>
   <release>
    <date>2016-06-07</date>
    <version>
