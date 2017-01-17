@@ -222,7 +222,7 @@ static PHP_MINIT_FUNCTION(apcu)
 	
     /* Disable APC in cli mode unless overridden by apc.enable_cli */
     if (!APCG(enable_cli) && !strcmp(sapi_module.name, "cli")) {
-        APCG(enabled) = 0;
+		APCG(enabled) = 0;
     }
 
 	/* only run initialization if APC is enabled */

@@ -565,6 +565,7 @@ PHP_APCU_API zend_bool apc_cache_store(apc_cache_t* cache, zend_string *strkey, 
     return ret;
 } /* }}} */
 
+#ifndef ZTS
 /* {{{ data_unserialize */
 static zval data_unserialize(const char *filename)
 {
@@ -646,6 +647,7 @@ static int apc_load_data(apc_cache_t* cache, const char *data_file)
 
     return 0;
 }
+#endif
 
 /* {{{ apc_cache_preload shall load the prepared data files in path into the specified cache */
 PHP_APCU_API zend_bool apc_cache_preload(apc_cache_t* cache, const char *path)
@@ -1505,8 +1507,9 @@ static APC_HOTSPOT zend_reference* my_copy_reference(const zend_reference* src, 
     GC_REFCOUNT(dst) = 1;
     GC_TYPE_INFO(dst) = IS_REFERENCE;
 
-    if (my_copy_zval(&dst->val, &src->val, ctxt) == NULL)
+    if (my_copy_zval(&dst->val, &src->val, ctxt) == NULL) {
         return NULL;
+    }
 
 	if (ctxt->copied.nTableSize) {
 		zend_hash_index_update_ptr(&ctxt->copied, (uintptr_t) src, dst);
@@ -1685,7 +1688,7 @@ static zval apc_cache_link_info(apc_cache_t *cache, apc_cache_slot_t* p)
 
     array_init(&link);
 
-    add_assoc_str(&link, "info", p->key.str);
+    add_assoc_str(&link, "info", zend_string_dup(p->key.str, 0));
     add_assoc_long(&link, "ttl", p->value->ttl);
 
     add_assoc_double(&link, "num_hits", (double)p->nhits);
@@ -1699,6 +1702,12 @@ static zval apc_cache_link_info(apc_cache_t *cache, apc_cache_slot_t* p)
     return link;
 }
 /* }}} */
+
+#if APC_MMAP
+#define apc_cache_info_set_memory_type() add_assoc_stringl(&info, "memory_type", "mmap", sizeof("mmap")-1)
+#else
+#define apc_cache_info_set_memory_type() add_assoc_stringl(&info, "memory_type", "IPC shared", sizeof("IPC shared")-1)
+#endif
 
 /* {{{ apc_cache_info */
 PHP_APCU_API zval apc_cache_info(apc_cache_t* cache, zend_bool limited)
@@ -1729,11 +1738,7 @@ PHP_APCU_API zval apc_cache_info(apc_cache_t* cache, zend_bool limited)
 		add_assoc_long(&info, "start_time", cache->header->stime);
 		add_assoc_double(&info, "mem_size", (double)cache->header->mem_size);
 
-#if APC_MMAP
-		add_assoc_stringl(&info, "memory_type", "mmap", sizeof("mmap")-1);
-#else
-		add_assoc_stringl(&info, "memory_type", "IPC shared", sizeof("IPC shared")-1);
-#endif
+		apc_cache_info_set_memory_type();
 
 		if (!limited) {
 		    /* For each hashtable slot */
@@ -1771,6 +1776,7 @@ PHP_APCU_API zval apc_cache_info(apc_cache_t* cache, zend_bool limited)
     return info;
 }
 /* }}} */
+#undef apc_cache_info_set_memory_type
 
 /*
  fetches information about the key provided
@@ -1873,8 +1879,24 @@ PHP_APCU_API void apc_cache_serializer(apc_cache_t* cache, const char* name) {
 	}
 } /* }}} */
 
+#ifndef APC_LOCK_RECURSIVE
+# define apc_cache_entry_try_begin() { \
+	if (APCG(recursion)++ == 0) { \
+		APC_LOCK(cache->header); \
+	} \
+}
 
-PHP_APCU_API void apc_cache_entry(apc_cache_t *cache, zval *key, zend_fcall_info *fci, zend_fcall_info_cache *fcc, zend_long ttl, zend_long now, zval *return_value) {
+# define apc_cache_entry_try_end() { \
+	if (--APCG(recursion) == 0) { \
+		APC_UNLOCK(cache->header); \
+	} \
+}
+#else
+# define apc_cache_entry_try_begin() APC_LOCK(cache->header);
+# define apc_cache_entry_try_end() APC_UNLOCK(cache->header);
+#endif
+
+PHP_APCU_API void apc_cache_entry(apc_cache_t *cache, zval *key, zend_fcall_info *fci, zend_fcall_info_cache *fcc, zend_long ttl, zend_long now, zval *return_value) {/*{{{*/
 	apc_cache_entry_t *entry = NULL;
 
 	if(!cache || apc_cache_busy(cache)) {
@@ -1886,15 +1908,7 @@ PHP_APCU_API void apc_cache_entry(apc_cache_t *cache, zval *key, zend_fcall_info
 		return;
 	}
 
-	php_apc_try({
-#ifndef APC_LOCK_RECURSIVE
-	if (APCG(recursion)++ == 0) {
-		APC_LOCK(cache->header);
-	}
-#else
-	APC_LOCK(cache->header);
-#endif
-	}, {
+	php_apc_try(apc_cache_entry_try_begin(), {
 		entry = apc_cache_find_internal(cache, Z_STR_P(key), now, 0);
 		if (!entry) {
 			int result = 0;
@@ -1915,16 +1929,10 @@ PHP_APCU_API void apc_cache_entry(apc_cache_t *cache, zval *key, zend_fcall_info
 				}
 			}
 		} else apc_cache_fetch_internal(cache, Z_STR_P(key), entry, now, &return_value);
-	}, {
-#ifndef APC_LOCK_RECURSIVE
-	if (--APCG(recursion) == 0) {
-		APC_UNLOCK(cache->header);
-	}
-#else
-	APC_UNLOCK(cache->header);
-#endif
-	});
-}
+	}, apc_cache_entry_try_begin());
+}/*}}}*/
+#undef apc_cache_entry_try_begin
+#undef apc_cache_entry_try_end
 
 /*
  * Local variables:
